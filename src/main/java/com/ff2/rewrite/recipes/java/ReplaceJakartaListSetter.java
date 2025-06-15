@@ -1,22 +1,26 @@
 package com.ff2.rewrite.recipes.java;
 
 import static com.ff2.rewrite.recipes.java.R.*;
+import static com.ff2.rewrite.recipes.java.R.methodInvocationMatcher;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.NlsRewrite;
+import org.openrewrite.Option;
 import org.openrewrite.Recipe;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Statement;
 
+@AllArgsConstructor
+@NoArgsConstructor
 public class ReplaceJakartaListSetter extends Recipe {
-    private transient MethodMatchers methodMatchers = new MethodMatchers();
-    private transient MethodModificators methodModificators = new MethodModificators();
+    private static transient MethodMatchers methodMatchers;
+    private static transient MethodModificators methodModificators;
 
     @Override
     public @NlsRewrite.DisplayName String getDisplayName() {
@@ -28,41 +32,55 @@ public class ReplaceJakartaListSetter extends Recipe {
         return "Replaces : 'new ArrayList<>()' with getListAttribute() & Removes : 'setListAttribute'.";
     }
 
+    @Option(displayName = "parentType", description = "De class die de List<..> bevat. Bijv. DeeltijdResponse")
+    private String parentType;
+
+    @Option(displayName = "attributeType", description = "Het attribuut die List<..> als type heeft. Bijv. 'java.util.List<why.now.Double>'")
+    private String attributeType;
+
+    @Option(displayName = "attributeGetter", description = "De getter om de List<..> op te halen. Bijv. 'getToegestaneUittreedPercentages'")
+    private String attributeGetter;
+
+
     @Override
     public JavaIsoVisitor<ExecutionContext> getVisitor() {
-        final Type objectType = type("DeeltijdResponse");
-        final Type attributeType = type("java.util.List<why.now.Double>");
+        if (methodMatchers == null && methodModificators == null) {
+            methodMatchers = new MethodMatchers();
+            methodModificators = new MethodModificators();
 
-        methodMatchers.add(variableDeclarationMatcher("objectDeclaration", objectType));
-        methodMatchers.add(variableDeclarationMatcher("attributeDeclaration", attributeType));
-        methodMatchers.add(methodInvocationMatcher("methodInvocation", objectType, attributeType));
+            final Type _parentType = type(parentType);
+            final Type _attributeType = type(attributeType);
 
-        //final Supplier<String> variableTypeSupplier = () -> variableType(methodModifier.currentStatement(J.VariableDeclarations.class));
-        //final Supplier<String> variableNameSupplier = () -> variableName(methodModifier.currentStatement(J.VariableDeclarations.class));
-        final Supplier<String> methodInvocationSupplier = () -> "response.getToegestaneUittreedPercentages()";
+            VariableDeclarationMatcher responseInstantiation = variableDeclarationMatcher().withName("responseInstantiation").withType(_parentType).withInitializer(R.Java.newInstruction());
+            methodMatchers.add(responseInstantiation);
 
-        methodModificators.add(
-                variableDeclarationReplacer("attributeDeclaration", null, null, methodInvocationSupplier));
-        methodModificators.add(collectedMethodRemover("methodInvocation"));
+            VariableDeclarationMatcher attributeDeclaration = variableDeclarationMatcher().withName("attributeDeclaration").withType(_attributeType).withInitializer(R.Java.newInstruction());
+            methodMatchers.add(attributeDeclaration);
 
+            MethodInvocationMatcher methodInvocationMatcher = methodInvocationMatcher("methodInvocation", _parentType, _attributeType);
+            methodMatchers.add(methodInvocationMatcher);
+
+            // "response.getToegestaneUittreedPercentages()"
+            final Supplier<String> methodInvocationSupplier = () -> "%s.%s()".formatted(methodInvocationMatcher.methodInvocation.getName().getSimpleName(), attributeGetter);
+
+            methodModificators.add(variableDeclarationReplacer("attributeDeclaration", null, null, methodInvocationSupplier));
+            methodModificators.add(collectedMethodRemover("methodInvocation"));
+        }
         return new JavaIsoVisitor<>() {
             private boolean methodMatched;
 
             @Override
             public Statement visitStatement(Statement pStatement, ExecutionContext context) {
                 final Statement statement = super.visitStatement(pStatement, context);
-                System.out.printf("Statement: %s\n", statement.toString());
                 if (statement instanceof J.Block) {
                     methodMatched = methodMatchers.match((J.Block) statement);
-                    System.out.printf("BlockMatched: %s\n", methodMatched);
                 }
 
                 if (methodMatched) {
                     final Optional<Matcher> optionalMatcher = methodMatchers.match(statement);
                     if (optionalMatcher.isPresent()) {
                         final MethodModificator modificator = methodModificators.get(optionalMatcher.get().name);
-                        if (modificator == null)
-                            return statement;
+                        if (modificator == null) return statement;
 
                         final Statement newStatement = modificator.statement(J.VariableDeclarations.class);
 
@@ -73,56 +91,30 @@ public class ReplaceJakartaListSetter extends Recipe {
                 return statement;
             }
         };
+
+
     }
 
 
-
-    private MethodModifier methodModifier() {
-        final MethodModifier methodModifier = new MethodModifier();
-
-        final Type objectType = type("DeeltijdResponse");
-        final Type attributeType = type("List<Double>");
-
-        methodModifier.add(variableDeclarationMatcher("objectDeclaration", objectType));
-        methodModifier.add(variableDeclarationMatcher("attributeDeclaration", attributeType));
-        methodModifier.add(methodInvocationMatcher("methodInvocation", objectType, attributeType));
-
-        final Supplier<String> variableTypeSupplier = () -> variableType(methodModifier.currentStatement(J.VariableDeclarations.class));
-        final Supplier<String> variableNameSupplier = () -> variableName(methodModifier.currentStatement(J.VariableDeclarations.class));
-        final Supplier<String> methodInvocationSupplier = () -> "response.getToegestaneUittreedPercentages()";
-
-        methodModifier.add(
-                variableDeclarationReplacer("attributeDeclaration", variableTypeSupplier, variableNameSupplier, methodInvocationSupplier));
-        methodModifier.add(collectedMethodRemover("methodInvocation"));
-
-        //Supplier<MethodInvocationReplacer> methodInvocationProvider = () -> methodInvocationProvider(
-        //        methodModifier.variableDeclaration("objectDeclaration").variableName(),
-        //        methodModifier.methodInvocation("methodInvocation").methodName.replace("set", "get")
-        //);
-        //
-        //methodModifier.replace("attributeDeclaration", methodInvocationProvider);
-
-        //Supplier<String> methodNameSupplier = () -> methodModifier.collector("listAssignment").variableName().replace("set", "get");
-        //methodModifier.collect("theAssignment",
-        //        MethodModifier.methodInvocation(object(() -> methodModifier.collector("objectDeclaration").variableName()),
-        //                method(methodModifier.collector("listAssignment"), (String s) -> s.replace("set", "get"))),
-        //        newInstance("ArrayList<>()")));
-
-        //methodModifier.collect("listAssignment",
-        //        MethodModifier.variableDeclaration()
-        //                .withSelect(()->methodModifier.collector("objectDeclaration").variableName())
-        //                .withArgument(collectorVariableName("listDeclaration")));
-        //
-        //methodModifier.collect("listAssignment")
-        //        .with(J.MethodInvocation.class)
-        //        .withSelect(CollectorVariableName("objectDeclaration"))
-        //        .withArgument(CollectorVariableName("listDeclaration"));
-        //
-        //methodModifier.replace("listDeclaration")
-        //        .with(MethodInvocation(CollectorVariableName("DeeltijdResponse"),
-        //                MethodName(CollectorMethodName("listAssignment"), (String s) -> s.replace("set", "get"))));
-
-        return methodModifier;
-    }
+//    private MethodModifier methodModifier() {
+//        final MethodModifier methodModifier = new MethodModifier();
+//
+//        final Type objectType = type("DeeltijdResponse");
+//        final Type attributeType = type("List<Double>");
+//
+//        methodModifier.add(variableDeclarationMatcher("objectDeclaration", objectType));
+//        methodModifier.add(variableDeclarationMatcher("attributeDeclaration", attributeType));
+//        methodModifier.add(methodInvocationMatcher("methodInvocation", objectType, attributeType));
+//
+//        final Supplier<String> variableTypeSupplier = () -> variableType(methodModifier.currentStatement(J.VariableDeclarations.class));
+//        final Supplier<String> variableNameSupplier = () -> variableName(methodModifier.currentStatement(J.VariableDeclarations.class));
+//        final Supplier<String> methodInvocationSupplier = () -> "response.getToegestaneUittreedPercentages()";
+//
+//        methodModifier.add(
+//                variableDeclarationReplacer("attributeDeclaration", variableTypeSupplier, variableNameSupplier, methodInvocationSupplier));
+//        methodModifier.add(collectedMethodRemover("methodInvocation"));
+//
+//        return methodModifier;
+//    }
 
 }

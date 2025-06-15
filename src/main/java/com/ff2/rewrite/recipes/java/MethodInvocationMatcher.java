@@ -8,6 +8,7 @@ import org.openrewrite.java.tree.Statement;
 public class MethodInvocationMatcher extends Matcher {
     public final Type type;
     public final Type parameterType;
+    public J.MethodInvocation methodInvocation;
 
     public MethodInvocationMatcher(final String name, final Type type, final Type parameterType) {
         super(name);
@@ -26,9 +27,13 @@ public class MethodInvocationMatcher extends Matcher {
                     final JavaType parm = ((J.Identifier) variable).getFieldType().getType();
                     boolean result = type == null || type.match(methodInvocation.getMethodType().getDeclaringType().getClassName());
                     result = result && (parameterType == null || parameterType.match(parm.toString()));
+                    System.out.printf("Statement: %s %s matched by %s\n", statement, result?"":"not", this);
+                    if (result) this.methodInvocation = methodInvocation;
+
                     return result;
                 }
             }
+            System.out.printf("Statement: %s %s matched by %s\n", statement, "not", this);
         }
         return false;
     }

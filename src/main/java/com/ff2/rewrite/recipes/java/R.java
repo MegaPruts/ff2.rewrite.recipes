@@ -1,10 +1,11 @@
 package com.ff2.rewrite.recipes.java;
 
 
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Tree;
@@ -20,6 +21,74 @@ public class R {
     private static final List<?> EMTPY_LIST = new ArrayList<>();
     private static final Space EMPTY_SPACE = Space.EMPTY;
 
+    public static List<String> unPackagedTypeNames(String typeName) {
+        List<String> result = new ArrayList<>();
+
+        // Match the outer type and the generic parameter
+        Pattern pattern = Pattern.compile("([^<]+)<([^>]+)>");
+        java.util.regex.Matcher matcher = pattern.matcher(typeName);
+
+        if (matcher.matches()) {
+            // Group 1 is the outer class, group 2 is the inner type parameter
+            String outer = matcher.group(1);
+            String inner = matcher.group(2);
+
+            // Extract simple names
+            String outerSimple = outer.substring(outer.lastIndexOf('.') + 1);
+            String innerSimple = inner.substring(inner.lastIndexOf('.') + 1);
+
+            result.add(outerSimple);
+            result.add(innerSimple);
+        } else {
+            // No generic found, just return the simple class name
+            String simple = typeName.substring(typeName.lastIndexOf('.') + 1);
+            result.add(simple);
+        }
+
+        return result;
+    }
+    public static String stripPackages(String type) {
+        // Remove outer package if present
+        int angleStart = type.indexOf('<');
+        int angleEnd = type.lastIndexOf('>');
+
+        if (angleStart != -1 && angleEnd != -1 && angleEnd > angleStart) {
+            String outer = type.substring(0, angleStart).trim();
+            String inner = type.substring(angleStart + 1, angleEnd).trim();
+
+            String simpleOuter = outer.substring(outer.lastIndexOf('.') + 1);
+            String simpleInner = inner.substring(inner.lastIndexOf('.') + 1);
+
+            return simpleOuter + "<" + simpleInner + ">";
+        } else {
+            // Not parameterized — just strip package
+            return type.substring(type.lastIndexOf('.') + 1);
+        }
+    }
+
+    public static class Java {
+        public static NewInstruction newInstruction(){
+            return new NewInstruction();
+        }
+        public static class NewInstruction implements Initializer {
+            public Type type;
+
+            @Override
+            public boolean match(J.VariableDeclarations.NamedVariable variable) {
+                @Nullable Expression initializer = variable.getInitializer();
+
+                return initializer!=null && initializer instanceof J.NewClass;
+            }
+
+            public Initializer withType(Type type) {
+                this.type=type;
+                return this;
+            }
+        }
+
+    }
+
+
     public static NewInstance newInstance(final String type) {
         return new NewInstance(type);
     }
@@ -30,6 +99,10 @@ public class R {
 
     public static Variable variable(final String variableName) {
         return new Variable(variableName);
+    }
+
+    public static VariableDeclarationMatcher variableDeclarationMatcher() {
+        return new VariableDeclarationMatcher(null, null);
     }
 
     public static VariableDeclarationMatcher variableDeclarationMatcher(final String name, final Type type) {
@@ -115,11 +188,11 @@ public class R {
         final long flagsBitMap = 0L;
         final JavaType.FullyQualified declaringType = null;
         final String name = null;
-        final JavaType returnType=null;
+        final JavaType returnType = null;
         final List<JavaType> thrownExceptions = new ArrayList<>();
-        final  List<JavaType.FullyQualified>annotations=new ArrayList<>();
-        final List<String> defaultValue =new ArrayList<>();
+        final List<JavaType.FullyQualified> annotations = new ArrayList<>();
+        final List<String> defaultValue = new ArrayList<>();
         final List<String> declaredFormalTypeNames = new ArrayList<>();
-        return new JavaType.Method(managedReference, flagsBitMap, declaringType,name,returnType, parameterNames, parameterTypes, thrownExceptions, annotations, defaultValue, declaredFormalTypeNames);
+        return new JavaType.Method(managedReference, flagsBitMap, declaringType, name, returnType, parameterNames, parameterTypes, thrownExceptions, annotations, defaultValue, declaredFormalTypeNames);
     }
 }

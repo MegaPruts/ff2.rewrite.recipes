@@ -9,10 +9,10 @@ public class ReplaceJakartaListSetterTest implements RewriteTest {
 
     @Test
     public void migrateMethodInvocation() {
-        rewriteRun(spec -> spec.recipe(new ReplaceJakartaListSetter()), java("""
+        rewriteRun(spec -> spec.recipe(new ReplaceJakartaListSetter("DeeltijdResponse","java.util.List<why.now.Double>","getToegestaneUittreedPercentages")), java("""
                  package why.now;
                  public class Double{}
-                 
+                
                 """
 
         ), java("""
@@ -32,33 +32,35 @@ public class ReplaceJakartaListSetterTest implements RewriteTest {
                 """
 
         ), java("""
-                import java.util.ArrayList;
-                import java.util.List;
-                import why.now.Double;
-                                              
-                public class ParametersDeeltijdDelegateImpl{
-                public DeeltijdResponse bepaalParametersDeeltijd() {
-                    final DeeltijdResponse response = new DeeltijdResponse();
-                    final List<Double> uittreedPercentages = new ArrayList<>();
-                    response.setToegestaneUittreedPercentages(uittreedPercentages);
-                    return response;
-                }
-                }
-                """,
+                        import java.util.ArrayList;
+                        import java.util.List;
+                        import why.now.Double;
+                        
+                        public class ParametersDeeltijdDelegateImpl{
+                        public DeeltijdResponse bepaalParametersDeeltijd() {
+                            final DeeltijdResponse response = new DeeltijdResponse();
+                            final List<Double> uittreedPercentages = new ArrayList<>();
+                            response.setToegestaneUittreedPercentages(uittreedPercentages);
+                            return response;
+                        }
+                        }
+                        """,
                 """
-                import java.util.ArrayList;
-                import java.util.List;
-                import why.now.Double;               
-                                              
-                public class ParametersDeeltijdDelegateImpl{
-                public DeeltijdResponse bepaalParametersDeeltijd() {
-                    final DeeltijdResponse response = new DeeltijdResponse();
-                    final List<Double> uittreedPercentages= response.getToegestaneUittreedPercentages();
-                    return response;
-                }
-                }
-                """
+                        import java.util.ArrayList;
+                        import java.util.List;
+                        import why.now.Double;               
+                        
+                        public class ParametersDeeltijdDelegateImpl{
+                        public DeeltijdResponse bepaalParametersDeeltijd() {
+                            final DeeltijdResponse response = new DeeltijdResponse();
+                            final List<Double> uittreedPercentages= response.getToegestaneUittreedPercentages();
+                            return response;
+                        }
+                        }
+                        """
 
         ));
     }
+
+
 }
