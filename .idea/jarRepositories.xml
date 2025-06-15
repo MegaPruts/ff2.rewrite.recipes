@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteRepositoriesConfiguration">
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="gps-maven-releases-virtual" />
+      <option name="url" value="${env.MVN_REPO_RELEASES}" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="my_local_repo_releases" />
+      <option name="name" value="gps-maven-releases-virtual" />
+      <option name="url" value="${env.MVN_REPO_RELEASES}" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="my_local_repo" />
+      <option name="name" value="my_local_repo" />
+      <option name="url" value="${env.MVN_REPO_RELEASES}" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="snapshots" />
+      <option name="name" value="gps-maven-snapshots-virtual" />
+      <option name="url" value="${env.MVN_REPO_SNAPSHOTS}" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+  </component>
+</project>
