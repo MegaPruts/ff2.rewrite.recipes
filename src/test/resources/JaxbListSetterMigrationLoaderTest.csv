@@ -1,0 +1,5 @@
+objectType,attributeType,attributeGetter
+nl.abp.cis.pio.bepalen_processtap_keuze_gps.v0200.ArrOfLogischBlokAdditioneelGegeven,nl.abp.cis.pio.bepalen_processtap_keuze_gps.v0200.LogischBlokAdditioneelGegeven,getLogischBlokAdditioneelGegeven
+nl.abp.cis.pio.bepalen_processtap_keuze_gps.v0200.ArrOfLogischBlokSituatie,nl.abp.cis.pio.bepalen_processtap_keuze_gps.v0200.LogischBlokSituatie,getLogischBlokSituatie
+nl.abp.cis.pio.bepalen_processtap_keuze_gps.v0200.CallServiceEchoResponse$CallServiceEchoResult,java.lang.Object,getContent
+nl.abp.cis.pio.bepalenopbouwgegevens.v0100.ArrayOfLogischBlokAlgemeenA,nl.abp.cis.pio.bepalenopbouwgegevens.v0100.LogischBlokAlgemeenA,getLogischBlokAlgemeenA

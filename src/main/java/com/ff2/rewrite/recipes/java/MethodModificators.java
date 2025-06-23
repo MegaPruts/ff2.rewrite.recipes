@@ -7,11 +7,16 @@ public class MethodModificators {
     private final Map<String, MethodModificator> methodModificators = new HashMap<>();
 
     public void add(MethodModificator methodModificator) {
+        System.out.printf("Registering MethodModificator: %s\n", methodModificator.name());
+
         methodModificators.put(methodModificator.name(), methodModificator);
     }
 
     public MethodModificator get(final String name) {
         return methodModificators.get(name);
+    }
+
+    public Map<String, MethodModificator> get() {return methodModificators;
     }
 
     //public boolean match(final J.MethodDeclaration method) {

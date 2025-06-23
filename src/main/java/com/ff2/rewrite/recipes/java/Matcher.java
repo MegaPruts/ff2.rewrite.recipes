@@ -12,7 +12,7 @@ public abstract class Matcher {
         this.name = name;
     }
 
-    final boolean match(List<Statement> statements) {
+    final boolean anyMatch(List<Statement> statements) {
         return statements.stream().anyMatch(this::match);
     }
 
@@ -21,6 +21,8 @@ public abstract class Matcher {
     public String name() {
         return name;
     }
+
+    abstract void reset();
 
 
 }

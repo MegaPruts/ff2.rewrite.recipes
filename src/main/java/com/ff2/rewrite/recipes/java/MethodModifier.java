@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
 
@@ -55,7 +54,7 @@ public class MethodModifier {
         if (methodMatchers.size() == 0)
             throw new RuntimeException("No matchers specified");
 
-        if (methodMatchers.values().stream().allMatch(c -> c.match(method.getBody().getStatements()))) {
+        if (methodMatchers.values().stream().allMatch(c -> c.anyMatch(method.getBody().getStatements()))) {
             final J.Block newBody = method.getBody().withStatements(doReplacements(method));
             return method.withBody(newBody);
         }

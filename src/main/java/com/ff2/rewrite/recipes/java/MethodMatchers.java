@@ -11,11 +11,12 @@ public class MethodMatchers {
     private final Map<String, Matcher> methodMatchers = new HashMap<>();
 
     public void add(Matcher methodMatcher) {
+        System.out.printf("Registering MethodMatcher: %s\n", methodMatcher.name);
         methodMatchers.put(methodMatcher.name(), methodMatcher);
     }
 
-    public boolean match(final J.Block block) {
-        return methodMatchers.values().stream().allMatch(c -> c.match(block.getStatements()));
+    public boolean allMatch(final J.Block block) {
+        return methodMatchers.values().stream().allMatch(m -> m.anyMatch(block.getStatements()));
     }
 
     public Optional<Matcher> match(final Statement statement) {
@@ -25,5 +26,17 @@ public class MethodMatchers {
 
     public Matcher get(final String collectorName) {
         return methodMatchers.get(collectorName);
+    }
+
+    public void resetAll() {
+        methodMatchers.values().stream().forEach(m -> m.reset());
+    }
+
+    public boolean isEmpty() {
+        return this.methodMatchers.isEmpty();
+    }
+
+    public Map<String, Matcher> get() {
+        return methodMatchers;
     }
 }
