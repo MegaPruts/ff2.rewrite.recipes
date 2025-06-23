@@ -1,0 +1,26 @@
+# Bekijk eerst de documentatie voordat je deze file aanpast
+# .gitignore gebruikt GEEN ant-style globbing!
+# https://git-scm.com/docs/gitignore
+# https://labs.consol.de/development/git/2017/02/22/gitignore.html
+
+# Intellij IML files en idea folders
+*.iml
+.idea/
+.vscode/
+/.run/
+/gps.ipr
+/gps.iws
+
+# Maven target directories
+target/
+
+# Eclipse project files and folders
+.project
+.classpath
+.bpmn/
+.settings/
+
+# JRebel generated config files
+rebel.xml
+.run/**
+/.metadata/
